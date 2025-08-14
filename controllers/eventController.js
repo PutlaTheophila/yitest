@@ -391,49 +391,164 @@ const createEvents = asyncErrorHandler(async(req, res)=>{
 })
 
 
+// const getEventsForEventsScreen = asyncErrorHandler(async (req, res, next) => {
+//   console.log('hi from get events');
+//   const { tags, offset = 0, limit = 10, date } = req.query;
+//   const token = req.headers?.token;
+
+//   console.log(token);
+//   const { id: userId } = await verifyToken(token);
+//   console.log(userId);
+//   const user = await User.findById(userId);
+//   const isAdmin =
+//   user.userRole === 'admin' ||
+//   user.userRole === 'co-admin';
+
+//   const tagList = tags ? tags.split(',') : [];
+
+//   console.log('in events screen ');
+
+//   const filter = {};
+//   console.log(filter);
+
+//   if (tagList.length > 0) {
+//     filter.tags = { $all: tagList };
+//   }
+//   console.log(filter);
+
+//   if (date) {
+//     const startOfDay = new Date(date);
+//     const endOfDay = new Date(date);
+//     endOfDay.setUTCHours(23, 59, 59, 999);
+
+//     filter.date = {
+//       $gte: startOfDay,
+//       $lte: endOfDay,
+//     };
+//   }
+
+//   const events = await Event.find(filter)
+//     .sort({ date: 1 })
+//     .skip(Number(offset))
+//     .limit(Number(limit))
+//     .select('title tags venue date endDate upvotes rsvps bannerImageUrl rsvpDeadline maxCapacity category');
+
+//   const processedEvents = events.map(event => {
+//     const hasUpvoted = event.upvotes?.some(up => up.toString() === userId) || false;
+//     const hasRSVPed = event.rsvps?.some(rsvp => rsvp.userId?.toString() === userId) || false;
+
+//     return {
+//       _id: event._id,
+//       title: event.title,
+//       tags: event.tags,
+//       bannerImageUrl: event.bannerImageUrl,
+//       venue: event.venue,
+//       date: event.date,
+//       endDate: event.endDate,
+//       hasUpvoted,
+//       hasRSVPed,
+//       totalUpvotes: event.upvotes?.length || 0,
+//       totalRSVPs: event.rsvps?.length || 0,
+//       rsvpDeadline: event.rsvpDeadline,
+//       maxCapacity: event.maxCapacity
+//     };
+//   });
+
+
+//   const allEventDates = await Event.aggregate([
+//       {
+//         $project: {
+//           date: 1,
+//           title: { $arrayElemAt: ["$tags", 0] }  // rename first tag as "title"
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: "$date",
+//           title: { $first: "$title" },
+//           date: { $first: "$date" }
+//         }
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           title: 1,
+//           date: 1
+//         }
+//       },
+//       {
+//         $sort: { date: 1 }
+//       }
+//     ]);
+  
+//     // 2. Get RSVP'd events for user (keep original title and date)
+//     const user2 = await User.findById(userId).populate({
+//       path: 'events.rsvps',
+//       select: 'title date'
+//     });
+  
+//     const userRSVPedEvents = user2?.events?.rsvps || [];
+//     console.log(userRSVPedEvents);
+  
+//   res.status(200).json({
+//     success: true,
+//     events: processedEvents,
+//     isAdmin: isAdmin,
+//     // we will send dates also here to prevent loading dialog
+//     allEventDates,
+//     userRSVPedEvents
+    
+//   });
+// });
+
 const getEventsForEventsScreen = asyncErrorHandler(async (req, res, next) => {
   console.log('hi from get events');
   const { tags, offset = 0, limit = 10, date } = req.query;
   const token = req.headers?.token;
 
-  console.log(token);
   const { id: userId } = await verifyToken(token);
-  console.log(userId);
   const user = await User.findById(userId);
-  const isAdmin =
-  user.userRole === 'admin' ||
-  user.userRole === 'co-admin';
+  const isAdmin = ['admin', 'co-admin'].includes(user.userRole);
 
   const tagList = tags ? tags.split(',') : [];
-
-  console.log('in events screen ');
-
   const filter = {};
-  console.log(filter);
-
   if (tagList.length > 0) {
     filter.tags = { $all: tagList };
   }
-  console.log(filter);
 
-  if (date) {
-    const startOfDay = new Date(date);
-    const endOfDay = new Date(date);
-    endOfDay.setUTCHours(23, 59, 59, 999);
+  const now = new Date();
+  let todayStart = new Date(now.setUTCHours(0, 0, 0, 0));
 
-    filter.date = {
-      $gte: startOfDay,
-      $lte: endOfDay,
-    };
-  }
-
-  const events = await Event.find(filter)
+  // 1️⃣ Upcoming events from today onwards (soonest first)
+  const upcomingFromToday = await Event.find({
+    ...filter,
+    date: { $gte: todayStart }
+  })
     .sort({ date: 1 })
-    .skip(Number(offset))
-    .limit(Number(limit))
     .select('title tags venue date endDate upvotes rsvps bannerImageUrl rsvpDeadline maxCapacity category');
 
-  const processedEvents = events.map(event => {
+  // 2️⃣ Upcoming events with no date filter but still future (if needed)
+  const upcomingOthers = await Event.find({
+    ...filter,
+    date: { $gt: todayStart }
+  })
+    .sort({ date: 1 })
+    .select('title tags venue date endDate upvotes rsvps bannerImageUrl rsvpDeadline maxCapacity category');
+
+  // 3️⃣ Past events (latest first)
+  const completedEvents = await Event.find({
+    ...filter,
+    date: { $lt: todayStart }
+  })
+    .sort({ date: -1 })
+    .select('title tags venue date endDate upvotes rsvps bannerImageUrl rsvpDeadline maxCapacity category');
+
+  // Merge lists: today+future first, then others, then past
+  const mergedEvents = [
+    ...upcomingFromToday,
+    ...upcomingOthers,
+    ...completedEvents
+  ].map(event => {
     const hasUpvoted = event.upvotes?.some(up => up.toString() === userId) || false;
     const hasRSVPed = event.rsvps?.some(rsvp => rsvp.userId?.toString() === userId) || false;
 
@@ -454,52 +569,49 @@ const getEventsForEventsScreen = asyncErrorHandler(async (req, res, next) => {
     };
   });
 
-
+  // Calendar dates list
   const allEventDates = await Event.aggregate([
-      {
-        $project: {
-          date: 1,
-          title: { $arrayElemAt: ["$tags", 0] }  // rename first tag as "title"
-        }
-      },
-      {
-        $group: {
-          _id: "$date",
-          title: { $first: "$title" },
-          date: { $first: "$date" }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          title: 1,
-          date: 1
-        }
-      },
-      {
-        $sort: { date: 1 }
+    {
+      $project: {
+        date: 1,
+        title: { $arrayElemAt: ["$tags", 0] }
       }
-    ]);
-  
-    // 2. Get RSVP'd events for user (keep original title and date)
-    const user2 = await User.findById(userId).populate({
-      path: 'events.rsvps',
-      select: 'title date'
-    });
-  
-    const userRSVPedEvents = user2?.events?.rsvps || [];
-    console.log(userRSVPedEvents);
-  
+    },
+    {
+      $group: {
+        _id: "$date",
+        title: { $first: "$title" },
+        date: { $first: "$date" }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        title: 1,
+        date: 1
+      }
+    },
+    {
+      $sort: { date: 1 }
+    }
+  ]);
+
+  // User RSVP'd events
+  const user2 = await User.findById(userId).populate({
+    path: 'events.rsvps',
+    select: 'title date'
+  });
+  const userRSVPedEvents = user2?.events?.rsvps || [];
+
   res.status(200).json({
     success: true,
-    events: processedEvents,
-    isAdmin: isAdmin,
-    // we will send dates also here to prevent loading dialog
+    events: mergedEvents.slice(Number(offset), Number(offset) + Number(limit)),
+    isAdmin,
     allEventDates,
     userRSVPedEvents
-    
   });
 });
+
 
 // const rsvpEvent = asyncErrorHandler(async (req, res, next) => {
 //   const token = req.headers.token;
