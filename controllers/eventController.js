@@ -517,25 +517,17 @@ const getEventsForEventsScreen = asyncErrorHandler(async (req, res, next) => {
   }
 
   const now = new Date();
-  let todayStart = new Date(now.setUTCHours(0, 0, 0, 0));
+  const todayStart = new Date(now.setUTCHours(0, 0, 0, 0));
 
-  // 1️⃣ Upcoming events from today onwards (soonest first)
-  const upcomingFromToday = await Event.find({
+  // ✅ Upcoming events (today & future) - soonest first
+  const upcomingEvents = await Event.find({
     ...filter,
     date: { $gte: todayStart }
   })
     .sort({ date: 1 })
     .select('title tags venue date endDate upvotes rsvps bannerImageUrl rsvpDeadline maxCapacity category');
 
-  // 2️⃣ Upcoming events with no date filter but still future (if needed)
-  const upcomingOthers = await Event.find({
-    ...filter,
-    date: { $gt: todayStart }
-  })
-    .sort({ date: 1 })
-    .select('title tags venue date endDate upvotes rsvps bannerImageUrl rsvpDeadline maxCapacity category');
-
-  // 3️⃣ Past events (latest first)
+  // ✅ Completed events (past) - latest first
   const completedEvents = await Event.find({
     ...filter,
     date: { $lt: todayStart }
@@ -543,12 +535,8 @@ const getEventsForEventsScreen = asyncErrorHandler(async (req, res, next) => {
     .sort({ date: -1 })
     .select('title tags venue date endDate upvotes rsvps bannerImageUrl rsvpDeadline maxCapacity category');
 
-  // Merge lists: today+future first, then others, then past
-  const mergedEvents = [
-    ...upcomingFromToday,
-    ...upcomingOthers,
-    ...completedEvents
-  ].map(event => {
+  // Merge without duplicates
+  const mergedEvents = [...upcomingEvents, ...completedEvents].map(event => {
     const hasUpvoted = event.upvotes?.some(up => up.toString() === userId) || false;
     const hasRSVPed = event.rsvps?.some(rsvp => rsvp.userId?.toString() === userId) || false;
 
@@ -611,6 +599,7 @@ const getEventsForEventsScreen = asyncErrorHandler(async (req, res, next) => {
     userRSVPedEvents
   });
 });
+
 
 
 // const rsvpEvent = asyncErrorHandler(async (req, res, next) => {
