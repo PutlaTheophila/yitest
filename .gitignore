@@ -1,0 +1,5 @@
+# Don't commit sensitive environment variables
+.env
+
+# Don't commit installed dependencies
+node_modules/
