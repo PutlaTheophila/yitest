@@ -237,8 +237,9 @@ const deleteUserByUser = asyncErrorHandler(async(req,res,next)=>{
     return next(new CustomError('User not logged in' , 404));
   }
   const {id:userId} = await verifyToken(token);
-  const user = await User.findByIdAndDelete(userId);
+  const user = await User.findById(userId);
   if(!user) return next(new CustomError('User not found' , 404))
+  await User.findByIdAndDelete(userId);
   res.status(200).json({
     status:'success',
     user
