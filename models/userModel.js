@@ -10,6 +10,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // for OTP verification status
   },
+  isDisabled:{
+    type: Boolean,
+    default:false
+  },
   name: {
     type: String,
     required: true,

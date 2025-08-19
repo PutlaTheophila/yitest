@@ -231,6 +231,19 @@ const deleteUser = asyncErrorHandler(async (req, res, next) => {
 });
 
 
+const deleteUserByUser = asyncErrorHandler(async(req,res,next)=>{
+  const token = req.headers.token;
+  if(!token){
+    return next(new CustomError('User not logged in' , 404));
+  }
+  const {id:userId} = await verifyToken(token);
+  if(userId) return next(new CustomError('User not found' , 404))
+  const user = await User.findByIdAndDelete(userId);
+  res.status(200).json({
+    status:'success',
+    user
+  })
+})
 
 const updateUserProfile = asyncErrorHandler(async(req, res)=>{
     const data = req.body;
@@ -270,5 +283,6 @@ module.exports = {
     userProfile,
     updateUser,
     updateUserProfile,
-    updateUserPermissions
+    updateUserPermissions,
+    deleteUserByUser
 }

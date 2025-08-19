@@ -1,6 +1,6 @@
 const express = require("express");
 const userRouter = express.Router();
-const {createUser, getAllUsers, getUser, deleteUser , userProfile, updateUser, updateUserProfile, updateUserPermissions , createUsers} = require("../controllers/userController.js");
+const {createUser, getAllUsers, getUser, deleteUser , userProfile, updateUser, updateUserProfile, updateUserPermissions , createUsers , deleteUserByUser} = require("../controllers/userController.js");
 const { protect } = require('../utils/jwt.js')
 const upload = require('../mw/cloudinaryMiddleware.js');
 
@@ -12,6 +12,7 @@ userRouter.route('/')
 userRouter.route('/profile')
     .get(userProfile)
     .patch(upload.single('profilePhoto'),updateUserProfile)
+    .delete(deleteUserByUser)
 
 userRouter.route('/permissions/:id')
     .patch(updateUserPermissions)
