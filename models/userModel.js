@@ -85,7 +85,7 @@ const userSchema = new mongoose.Schema({
   //   default: 'not-specified',
   // },
   yiInitiatives: {
-    type: String,
+    type: [String],
     enum: [
       'Membership',
       'Yuva',

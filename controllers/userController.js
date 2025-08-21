@@ -29,10 +29,9 @@ const createUser = asyncErrorHandler(async (req, res, next) => {
     industry : parseIfString(req.body.industry),
     interestAreas : parseIfString(req.body.interestAreas),
     yiRole: body.yiRole || 'Member',                  
-    yiTeam: body.yiTeam || 'not-specified',                  
-    // yiMytri: body.yiMytri || 'not-specified',              
-    // yiProjects: body.yiProjects || 'not-specified',         
-    yiInitiatives: body.yiInitiatives|| "not-specified"  ,
+    yiTeam: body.yiTeam || 'not-specified',                         
+    // yiInitiatives: body.yiInitiatives|| "not-specified"  ,
+    yiInitiatives: parseIfString(body.yiInitiatives) ,
     yearOfJoining : body.yearOfJoining || "not-specified"
     };
 
@@ -109,9 +108,8 @@ const updateUser = asyncErrorHandler(async (req, res, next) => {
     industry: JSON.parse(req.body.industries),
     interestAreas: JSON.parse(req.body.interests),
     yiTeam : req.body.yiTeam,
-    yiInitiatives : req.body.yiInitiative,
-    // yiMytri : req.body.yiMythri,
-    // yiProjects : req.body.yiProject,
+    // yiInitiatives : req.body.yiInitiative,
+    yiInitiatives : JSON.parse(req.body.yiInitiatives),
     yiRole : req.body.yiRole,
     yearOfJoining :req.body.yearOfJoining,
   };
