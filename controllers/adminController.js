@@ -22,10 +22,13 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
     Event.countDocuments({ endDate: { $lte: now } }),
     User.aggregate([{ $group: { _id: "$yiRole", count: { $sum: 1 } } }]),
     User.aggregate([{ $group: { _id: "$userRole", count: { $sum: 1 } } }]),
-    User.find({ yiRole: 'EC' }).select('name mobile yiTeam yiMytri yiInitiatives yiProjects'),
-    User.find({ yiRole: 'Chair' }).select('name mobile yiTeam yiMytri yiInitiatives yiProjects'),
-    User.find({ userRole: 'admin' }).select('name mobile yiTeam yiMytri yiInitiatives yiProjects'),
-    User.find({ userRole: 'co-admin' }).select('name mobile yiTeam yiMytri yiInitiatives yiProjects'),
+    User.find({ yiRole: 'EC' }).select('name mobile yiTeam  yiInitiatives '),
+    User.find({ yiRole: 'Chair' }).select('name mobile yiTeam  yiInitiatives '),
+    User.find({ yiRole: 'EC-Chair' }).select('name mobile yiTeam  yiInitiatives '),
+    User.find({ yiRole: 'EC-CoChair' }).select('name mobile yiTeam  yiInitiatives '),
+    User.find({ yiRole: 'Steering Committee' }).select('name mobile yiTeam  yiInitiatives '),
+    User.find({ userRole: 'admin' }).select('name mobile yiTeam  yiInitiatives '),
+    User.find({ userRole: 'co-admin' }).select('name mobile yiTeam  yiInitiatives '),
   ]);
 
   // Helper to extract count by role
@@ -36,6 +39,9 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
 
   const ecCount = mapCount(roleCountAgg, 'EC');
   const chairCount = mapCount(roleCountAgg, 'Chair');
+  const ECChairCount = mapCount(roleCountAgg, 'EC-Chair');
+  const ECCoChairCount = mapCount(roleCountAgg, 'EC-CoChair');
+  const SteeringCommitteeCount  = mapCount(roleCountAgg, 'Steering Committee');
   const adminCount = mapCount(adminCountAgg, 'admin');
 
   res.status(200).json({
@@ -45,7 +51,10 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
     ecCount,
     chairCount,
     adminCount,
+    ECChairCount,
+    ECCoChairCount,
     ecMembers,
+    SteeringCommitteeCount,
     chairs,
     admins,
     coAdmins
@@ -67,7 +76,6 @@ exports.getAllUsers = async (req, res) => {
 // Update a user's role or fields
 exports.updateUser = async (req, res) => {
     console.log('updatinf');
-  // await new Promise(res => setTimeout(res, 3000));
   try {
     const { userId } = req.params;
     const updateFields = req.body;
