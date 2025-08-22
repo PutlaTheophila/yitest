@@ -74,16 +74,6 @@ const userSchema = new mongoose.Schema({
     enum: ['J9 Power', 'Piramal Fires', 'Zoff Strikers', 'OBCL Riders', 'NA','not-specified'],
     default: 'not-specified',
   },
-  // yiMytri: {
-  //   type: String,
-  //   enum: ['Membership', 'Yuva', 'Thalir', 'Rural Initiative', 'NA','not-specified' ],
-  //   default: 'not-specified',
-  // },
-  // yiProjects: {
-  //   type: String,
-  //   enum: ['Masoom', 'Road safety', 'Climate Action', 'Accessibility', 'Health', 'NA','not-specified'],
-  //   default: 'not-specified',
-  // },
   yiInitiatives: {
     type: [String],
     enum: [
@@ -102,7 +92,7 @@ const userSchema = new mongoose.Schema({
       'not-specified',
       'NA'
     ],
-    default: 'not-specified',
+    default: ['not-specified'],
   },
   yearOfJoining: {
     type: String,
