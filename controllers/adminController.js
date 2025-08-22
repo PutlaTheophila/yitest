@@ -16,7 +16,9 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
     ecCoChairs,
     steeringCommittee,
     admins,
-    coAdmins
+    coAdmins,
+    CoChairs
+
   ] = await Promise.all([
     User.countDocuments({}),
     Event.countDocuments({ date: { $gte: now } }),
@@ -29,6 +31,7 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
     User.find({ yiRole: 'Steering Committee' }).select('name mobile yiTeam yiInitiatives'),
     User.find({ userRole: 'admin' }).select('name mobile yiTeam yiInitiatives'),
     User.find({ userRole: 'co-admin' }).select('name mobile yiTeam yiInitiatives'),
+    User.find({ yiRole: 'Co-Chair' }).select('name mobile yiTeam yiInitiatives'),
   ]);
 
   // Helper for counts
@@ -40,6 +43,7 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
   const chairCount = mapCount(roleCountAgg, 'Chair');
   const ECChairCount = mapCount(roleCountAgg, 'EC-Chair');
   const ECCoChairCount = mapCount(roleCountAgg, 'EC-CoChair');
+  const coChairCount = mapCount(roleCountAgg, 'Co-Chair');
   const SteeringCommitteeCount = mapCount(roleCountAgg, 'Steering Committee');
   const adminCount = mapCount(adminCountAgg, 'admin');
 
@@ -50,11 +54,13 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
     chairCount,
     ECChairCount,
     ECCoChairCount,
+    coChairCount,
     SteeringCommitteeCount,
     adminCount,
     chairs,
     ecChairs,
     ecCoChairs,
+    CoChairs,
     steeringCommittee,
     admins,
     coAdmins
