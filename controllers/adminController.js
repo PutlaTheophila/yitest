@@ -1,19 +1,20 @@
 const User = require('../models/userModel.js');
 const Event = require('../models/eventModel.js');
 const asyncErrorHandler = require('../utils/asyncErrorHandler');
+
+
 exports.getAdminStats = asyncErrorHandler(async (req, res) => {
   const now = new Date();
-  console.log('in admin stats');
-
-  // Execute all MongoDB operations in parallel
   const [
     totalUsers,
     upcomingEvents,
     completedEvents,
     roleCountAgg,
     adminCountAgg,
-    ecMembers,
     chairs,
+    ecChairs,
+    ecCoChairs,
+    steeringCommittee,
     admins,
     coAdmins
   ] = await Promise.all([
@@ -22,40 +23,39 @@ exports.getAdminStats = asyncErrorHandler(async (req, res) => {
     Event.countDocuments({ endDate: { $lte: now } }),
     User.aggregate([{ $group: { _id: "$yiRole", count: { $sum: 1 } } }]),
     User.aggregate([{ $group: { _id: "$userRole", count: { $sum: 1 } } }]),
-    User.find({ yiRole: 'EC' }).select('name mobile yiTeam  yiInitiatives '),
-    User.find({ yiRole: 'Chair' }).select('name mobile yiTeam  yiInitiatives '),
-    User.find({ yiRole: 'EC-Chair' }).select('name mobile yiTeam  yiInitiatives '),
-    User.find({ yiRole: 'EC-CoChair' }).select('name mobile yiTeam  yiInitiatives '),
-    User.find({ yiRole: 'Steering Committee' }).select('name mobile yiTeam  yiInitiatives '),
-    User.find({ userRole: 'admin' }).select('name mobile yiTeam  yiInitiatives '),
-    User.find({ userRole: 'co-admin' }).select('name mobile yiTeam  yiInitiatives '),
+    User.find({ yiRole: 'Chair' }).select('name mobile yiTeam yiInitiatives'),
+    User.find({ yiRole: 'EC-Chair' }).select('name mobile yiTeam yiInitiatives'),
+    User.find({ yiRole: 'EC-CoChair' }).select('name mobile yiTeam yiInitiatives'),
+    User.find({ yiRole: 'Steering Committee' }).select('name mobile yiTeam yiInitiatives'),
+    User.find({ userRole: 'admin' }).select('name mobile yiTeam yiInitiatives'),
+    User.find({ userRole: 'co-admin' }).select('name mobile yiTeam yiInitiatives'),
   ]);
 
-  // Helper to extract count by role
+  // Helper for counts
   const mapCount = (list, key) => {
     const found = list.find((r) => r._id === key);
     return found ? found.count : 0;
   };
 
-  const ecCount = mapCount(roleCountAgg, 'EC');
   const chairCount = mapCount(roleCountAgg, 'Chair');
   const ECChairCount = mapCount(roleCountAgg, 'EC-Chair');
   const ECCoChairCount = mapCount(roleCountAgg, 'EC-CoChair');
-  const SteeringCommitteeCount  = mapCount(roleCountAgg, 'Steering Committee');
+  const SteeringCommitteeCount = mapCount(roleCountAgg, 'Steering Committee');
   const adminCount = mapCount(adminCountAgg, 'admin');
 
   res.status(200).json({
     totalUsers,
     upcomingEvents,
     completedEvents,
-    ecCount,
     chairCount,
-    adminCount,
     ECChairCount,
     ECCoChairCount,
-    ecMembers,
     SteeringCommitteeCount,
+    adminCount,
     chairs,
+    ecChairs,
+    ecCoChairs,
+    steeringCommittee,
     admins,
     coAdmins
   });
