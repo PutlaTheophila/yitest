@@ -301,14 +301,14 @@ const getEvent = asyncErrorHandler(async (req, res, next) => {
           // RSVP list
           const rsvpUserIds = event.rsvps.map(r => r.userId);
           const rsvpUsers = await User.find({ _id: { $in: rsvpUserIds } }).select(
-            '_id name mobile yiTeam yiMytri yiProjects yiInitiatives'
+            '_id name mobile yiTeam yiInitiatives'
           );
           eventObj.rsvpList = rsvpUsers;
 
           // QR Check-in list
           const checkInUserIds = event.qrCheckIns.map(c => c.userId);
           const checkInUsers = await User.find({ _id: { $in: checkInUserIds } }).select(
-            '_id name mobile yiTeam yiMytri yiProjects yiInitiatives'
+            '_id name mobile yiTeam yiInitiatives'
           );
           eventObj.qrCheckInList = checkInUsers;
         }
