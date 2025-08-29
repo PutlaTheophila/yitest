@@ -367,7 +367,10 @@ exports.validateUserForOTP = (mobile) => {
   "9303796979",
   "9165311114",
   "8226054444",
-  "9769175760"
+  "9769175760",
+  "9777496484",
+  "8435581052",
+  "7000209749"
   ];
   return validNumbers.includes(mobile);
 }
