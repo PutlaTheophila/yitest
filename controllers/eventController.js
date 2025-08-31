@@ -849,9 +849,6 @@ const attendanceStats = asyncErrorHandler(async (req, res, next) => {
 });
 
 
-
-
-
 module.exports = {
     createEvent , getAllEvents , getEvent , deleteEvent , createEvents , rsvpEvent , getEventsForEventsScreen , upvoteEvent , updateEvent ,markAttendance , attendanceStats
 }
