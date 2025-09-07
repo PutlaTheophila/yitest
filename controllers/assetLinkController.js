@@ -1,0 +1,22 @@
+// controllers/assetlinksController.js
+
+const getAssetLinks = (req, res) => {
+  // Explicitly set content type
+  res.setHeader("Content-Type", "application/json");
+
+  // Send as proper JSON
+  res.status(200).json([
+    {
+      relation: ["delegate_permission/common.handle_all_urls"],
+      target: {
+        namespace: "android_app",
+        package_name: "in.pranaa.yi",
+        sha256_cert_fingerprints: [
+          "7C:D0:74:1B:14:AD:5D:87:38:F5:A2:E1:85:10:2B:40:74:0E:5A:8B:13:19:9D:A3:9C:58:16:52:B3:22:1A:FF"
+        ]
+      }
+    }
+  ]);
+};
+
+module.exports = { getAssetLinks };
