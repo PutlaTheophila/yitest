@@ -47,7 +47,7 @@ app.use('/api/v1/calendar', calendarRouter);
 app.use('/api/v1/notification', notificationRouter);
 app.use('/api/v1/fcm', fcmRouter);
 app.use('/api/v1/coupon', couponRouter);
-app.use("/", assetLinksRouter);
+app.use('/.well-known/assetlinks.json', assetLinksRouter);
 
 app.use((err, req, res, next) => {
   console.error('global error handler called....');

@@ -3,7 +3,7 @@
 const getAssetLinks = (req, res) => {
   // Explicitly set content type
   res.setHeader("Content-Type", "application/json");
-
+  console.log('hi');
   // Send as proper JSON
   res.status(200).json([
     {
