@@ -714,7 +714,7 @@ const getEventLink = async (req, res) => {
     const { eventId } = req.params;
 
     // This is the deep link to your event
-    const eventUrl = `https://pranaa.in/event/${eventId}`;
+    const eventUrl = `https://yi.pranaa.in/event/${eventId}`;
     res.json({ url: eventUrl });
   } catch (error) {
     console.error("Error generating event link:", error);
