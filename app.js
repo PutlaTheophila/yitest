@@ -167,21 +167,52 @@ app.use('/api/v1/fcm', fcmRouter);
 app.use('/api/v1/coupon', couponRouter);
 app.use('/.well-known/assetlinks.json', assetLinksRouter);
 
-// Deep link endpoint (MUST exist for Android App Links)
-app.get('/event/:eventId', (req, res) => {
-  const { eventId } = req.params;
-  res.send(`
-    <html>
+const detectDevice = (userAgent) => {
+  if (/android/i.test(userAgent)) {
+    return 'android';
+  } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
+    return 'ios';
+  } else {
+    return 'other';
+  }
+};
+
+app.get('/event/:id', (req, res) => {
+  const eventId = req.params.id;
+  const userAgent = req.headers['user-agent'] || '';
+  const device = detectDevice(userAgent);
+
+  if (device === 'android') {
+    // Redirect to Google Play Store
+    res.redirect('https://play.google.com/store/apps/details?id=in.pranaa.yi');
+  } else if (device === 'ios') {
+    // Replace with your App Store URL
+    res.redirect('https://apps.apple.com/in/app/whatson-yi/id6748990967');
+  } else {
+    // Serve a webpage for other devices (e.g., desktop)
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html lang="en">
       <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Event ${eventId}</title>
-        <meta name="description" content="YI App Event Deep Link" />
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+          h1 { color: #333; }
+          a { display: inline-block; margin: 10px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+          a:hover { background-color: #0056b3; }
+        </style>
       </head>
       <body>
-        <h1>Event ${eventId}</h1>
-        <p>If this page opened in browser, please open the YI App to view the event.</p>
+        <h1>Event ID: ${eventId}</h1>
+        <p>Download the YI App to view this event!</p>
+        <a href="https://play.google.com/store/apps/details?id=in.pranaa.yi">Get on Google Play</a>
+        <a href="https://apps.apple.com/app/your-app-id">Get on App Store</a>
       </body>
-    </html>
-  `);
+      </html>
+    `);
+  }
 });
 
 // Error handler
