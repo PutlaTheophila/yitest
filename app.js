@@ -180,16 +180,27 @@ const detectDevice = (userAgent) => {
 app.get('/event/:id', (req, res) => {
   const eventId = req.params.id;
   const userAgent = req.headers['user-agent'] || '';
+  console.log('User-Agent:', userAgent); // Log for debugging
+  console.log('Headers:', req.headers); // Log all headers
+  const isApp = req.headers['x-yi-app'] === 'true' || userAgent.includes('YIApp') || userAgent.includes('Dart'); // Detect app (debug or release)
   const device = detectDevice(userAgent);
 
-  if (device === 'android') {
-    // Redirect to Google Play Store
+  if (isApp) {
+    // Serve JSON data for app requests
+    res.status(200).json({
+      eventId,
+      message: 'Event data for YI app',
+      // Replace with actual event data from your database, e.g.:
+      // event: { id: eventId, title: 'Sample Event', date: '2025-09-10', ... }
+    });
+  } else if (device === 'android') {
+    // Redirect to Google Play Store for Android browsers
     res.redirect('https://play.google.com/store/apps/details?id=in.pranaa.yi');
   } else if (device === 'ios') {
-    // Redirect to App Store
+    // Redirect to App Store for iOS browsers
     res.redirect('https://apps.apple.com/in/app/whatson-yi/id6748990967');
   } else {
-    // Serve a styled webpage for other devices (e.g., desktop)
+    // Serve styled webpage for other devices (e.g., desktop)
     res.status(200).send(`
       <!DOCTYPE html>
       <html lang="en">
@@ -286,8 +297,8 @@ app.get('/event/:id', (req, res) => {
       </head>
       <body>
         <div class="container">
-          <!-- Replace the src with your actual logo URL -->
-          <img src="./assets/Yi_logo.png" alt="YI Logo" class="logo">
+          <!-- Replace with your actual logo URL -->
+          <!-- <img src="https://your-logo-url.com/logo.png" alt="YI Logo" class="logo"> -->
           <h1>Event ID: ${eventId}</h1>
           <p>Download the YI What's On App to view this event!</p>
           <div class="button-container">

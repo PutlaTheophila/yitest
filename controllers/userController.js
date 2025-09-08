@@ -186,7 +186,7 @@ const getAllUsers = asyncErrorHandler(async (req, res, next) => {
   const user = await User.findById(userId);
   isAdmin = false;
   if(user){
-    if(user.userRole == 'admin' || user.userRole == 'co-admin'){
+    if(user.userRole == 'admin'){
         isAdmin = true;
     }
   }
@@ -285,3 +285,7 @@ module.exports = {
     updateUserPermissions,
     deleteUserByUser
 }
+
+
+
+
