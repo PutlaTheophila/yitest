@@ -12,7 +12,8 @@ const getAssetLinks = (req, res) => {
         namespace: "android_app",
         package_name: "in.pranaa.yi",
         sha256_cert_fingerprints: [
-          "7C:D0:74:1B:14:AD:5D:87:38:F5:A2:E1:85:10:2B:40:74:0E:5A:8B:13:19:9D:A3:9C:58:16:52:B3:22:1A:FF"
+          "7C:D0:74:1B:14:AD:5D:87:38:F5:A2:E1:85:10:2B:40:74:0E:5A:8B:13:19:9D:A3:9C:58:16:52:B3:22:1A:FF",
+          "4A:AE:D2:F1:25:8F:22:38:EC:F6:A0:B7:0F:15:05:75:EE:B3:42:F7:14:F2:F0:18:C1:C9:C6:C6:62:CA:C5:61"
         ]
       }
     }
