@@ -186,29 +186,121 @@ app.get('/event/:id', (req, res) => {
     // Redirect to Google Play Store
     res.redirect('https://play.google.com/store/apps/details?id=in.pranaa.yi');
   } else if (device === 'ios') {
-    // Replace with your App Store URL
+    // Redirect to App Store
     res.redirect('https://apps.apple.com/in/app/whatson-yi/id6748990967');
   } else {
-    // Serve a webpage for other devices (e.g., desktop)
+    // Serve a styled webpage for other devices (e.g., desktop)
     res.status(200).send(`
       <!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Event ${eventId}</title>
+        <title>Event ${eventId} - YI What's On</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
         <style>
-          body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-          h1 { color: #333; }
-          a { display: inline-block; margin: 10px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-          a:hover { background-color: #0056b3; }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ECE5DD;
+            color: #4A4A4A;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+          }
+          .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            background-color: #FFFFFF;
+            border-radius: 28px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+          }
+          .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+          }
+          h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4A4A4A;
+            margin-bottom: 16px;
+          }
+          p {
+            font-size: 16px;
+            font-weight: 400;
+            color: #7A7A7A;
+            margin-bottom: 24px;
+          }
+          .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+          }
+          a.button {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 24px;
+            background-color: #536142;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 24px;
+            transition: background-color 0.3s ease;
+          }
+          a.button:hover {
+            background-color: #3d4a2f;
+          }
+          a.button img {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+          }
+          @media (max-width: 600px) {
+            .container {
+              padding: 24px;
+              border-radius: 20px;
+            }
+            h1 {
+              font-size: 20px;
+            }
+            p {
+              font-size: 14px;
+            }
+            a.button {
+              padding: 10px 20px;
+              font-size: 12px;
+            }
+          }
         </style>
       </head>
       <body>
-        <h1>Event ID: ${eventId}</h1>
-        <p>Download the YI App to view this event!</p>
-        <a href="https://play.google.com/store/apps/details?id=in.pranaa.yi">Get on Google Play</a>
-        <a href="https://apps.apple.com/app/your-app-id">Get on App Store</a>
+        <div class="container">
+          <!-- Replace the src with your actual logo URL -->
+          <img src="./assets/Yi_logo.png" alt="YI Logo" class="logo">
+          <h1>Event ID: ${eventId}</h1>
+          <p>Download the YI What's On App to view this event!</p>
+          <div class="button-container">
+            <a href="https://play.google.com/store/apps/details?id=in.pranaa.yi" class="button">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play">
+              Get on Google Play
+            </a>
+            <a href="https://apps.apple.com/in/app/whatson-yi/id6748990967" class="button">
+              <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store">
+              Get on App Store
+            </a>
+          </div>
+        </div>
       </body>
       </html>
     `);
