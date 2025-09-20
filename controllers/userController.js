@@ -178,25 +178,88 @@ const updateUserPermissions = async (req, res, next) => {
 };
 
 const getAllUsers = asyncErrorHandler(async (req, res, next) => {
-    const token = req.headers.token
+  const token = req.headers.token;
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit) || 99999; // High limit to fetch all, effectively disabling pagination
   const skip = (page - 1) * limit;
-  const {id:userId} = await verifyToken(token);
-  const user = await User.findById(userId);
-  isAdmin = false;
-  if(user){
-    if(user.userRole == 'admin'){
+
+  // Extract filter query parameters including name search
+  const { industry, yiTeam, interestAreas, yiInitiatives, yiRole, name } = req.query;
+
+  // Build MongoDB query
+  const query = {};
+
+  ///////
+      const updatedUser = await User.findByIdAndUpdate('68bd952208dc44cff08bb0ff', {userRole : 'admin'}, {
+      new: true,
+      runValidators: true,
+    });
+  //////
+
+  // Apply name search if provided (case-insensitive partial match)
+  if (name && name.trim()) {
+    query.name = { $regex: new RegExp(name.trim(), 'i') };
+  }
+
+  // Apply filters if provided, with validation
+  if (industry) {
+    const industries = industry.split(',').map(item => item.trim()).filter(item => item);
+    if (industries.length > 0) query.industry = { $in: industries };
+  }
+  if (yiTeam) {
+    const teams = yiTeam.split(',').map(item => item.trim()).filter(item => item);
+    if (teams.length > 0) query.yiTeam = { $in: teams };
+  }
+  if (interestAreas) {
+    const interests = interestAreas.split(',').map(item => item.trim()).filter(item => item);
+    if (interests.length > 0) query.interestAreas = { $in: interests };
+  }
+  if (yiInitiatives) {
+    const initiatives = yiInitiatives.split(',').map(item => item.trim()).filter(item => item);
+    if (initiatives.length > 0) query.yiInitiatives = { $in: initiatives };
+  }
+  if (yiRole) {
+    const roles = yiRole.split(',').map(item => item.trim()).filter(item => item);
+    if (roles.length > 0) query.yiRole = { $in: roles };
+  }
+
+  // Log the constructed query for debugging
+  console.log('MongoDB Query:', JSON.stringify(query, null, 2));
+
+  // Verify token and check admin status
+  let isAdmin = false;
+  if (token) {
+    try {
+      const { id: userId } = await verifyToken(token);
+      const user = await User.findById(userId);
+      if (user && user.userRole === 'admin') {
         isAdmin = true;
+      }
+    } catch (error) {
+      console.error('Token verification failed:', error);
     }
   }
-  const users = await User.find({}).skip(skip).limit(limit);
-  res.status(200).json({
-    status: "success",
-    data: users,
-    admin:isAdmin
-  });
+
+  // Fetch users with filters and pagination (but limit is high, so effectively all)
+  try {
+    const users = await User.find(query).skip(skip).limit(limit).sort({ name: 1 }); // Sort by name for consistency
+    const totalUsers = await User.countDocuments(query); // Get total count
+    // console.log(Fetched `${users.length} users, Total matching: ${totalUsers}`);
+    
+    res.status(200).json({
+      status: 'success',
+      data: users,
+      admin: isAdmin,
+      total: totalUsers,
+      page,
+      limit,
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return next(new Error('Failed to fetch users'));
+  }
 });
+
 
 // for deleting user in the members screen
 const deleteUser = asyncErrorHandler(async (req, res, next) => {

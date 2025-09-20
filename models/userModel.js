@@ -89,6 +89,7 @@ const userSchema = new mongoose.Schema({
       'Learning',
       'Entrepreneurship',
       'Innovation',
+      'HERD',
       'not-specified',
       'NA'
     ],
