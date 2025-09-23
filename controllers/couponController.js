@@ -4,6 +4,7 @@ const { verifyToken } = require('../utils/jwt.js');
 const Coupon = require('../models/couponModel.js');
 const User = require('../models/userModel.js');
 const { verify } = require('jsonwebtoken');
+const {sendNotifications} = require('../utils/notificationSender.js');
 
 exports.createCoupon = asyncErrorHandler(async (req, res, next) => {
   const token = req.headers.token;
@@ -41,6 +42,21 @@ exports.createCoupon = asyncErrorHandler(async (req, res, next) => {
     brand
   });
   console.log(newCoupon);
+
+  try {
+    const usersToNotify = await User.find({});
+    const userIds = usersToNotify.map(u => u._id);
+    await sendNotifications({
+      userIds,
+      title: `New Coupon: ${newCoupon.brand}`,
+      message: `New coupon from  "${newCoupon.brand}" has been created. Check it out!`,
+      imageUrl: newCoupon.logoUrl,
+      refId: newCoupon._id,
+      type: 'Coupon',
+    });
+  } catch (err) {
+    console.error('⚠️ Notification sending failed:', err.message);
+  }
 
   res.status(200).json({
     success: true,
