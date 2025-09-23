@@ -291,10 +291,12 @@ const getEvent = asyncErrorHandler(async (req, res, next) => {
         eventObj.userRole = user.yiRole;
 
         const isAdmin =
-          user.userRole === 'admin' ||
+          user.userRole === 'admin'
+        const iscoAdmin = user.userRole === 
           user.userRole === 'co-admin';
 
         eventObj.isAdmin = isAdmin;
+        eventObj.iscoAdmin = iscoAdmin;
 
         // If admin, include RSVP user info
         if (isAdmin) {
