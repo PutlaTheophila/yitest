@@ -8,7 +8,8 @@ const resolveMapsLink = require('../utils/resolveMapsLink.js');
 const Notification = require('../models/notificationModel.js');
 const {sendNotifications} = require('../utils/notificationSender.js');
 const mongoose = require('mongoose');
-
+const {parse} = require('date-fns');
+const {convertMapUrlToPoint} = require('gmaps-expand-shorturl');
 
 
 // const createEvent = asyncErrorHandler(async (req, res) => {
@@ -184,49 +185,85 @@ const createEvent = asyncErrorHandler(async (req, res, next) => {
 
 
 const updateEvent = asyncErrorHandler(async (req, res) => {
-  console.log('in update event');
   try {
     const eventId = req.params.id;
     const data = req.body;
+    console.log('.............................................')
     console.log(data);
+    console.log('.............................................')
+
+    // Find existing event first
+    const existingEvent = await Event.findById(eventId);
+    if (!existingEvent) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
 
     let resolvedMapsLink;
-
-    if(data.venueAddress){
-      console.log('location updating ');
-      resolvedMapsLink =  await resolveMapsLink(data.venueAddress);
+    if (data.venueAddress) {
+      resolvedMapsLink = await resolveMapsLink(data.venueAddress);
+      console.log('✅',await convertMapUrlToPoint(data.venueAddress));
+      console.log(await resolveMapsLink('❤️',data.venueAddress));
+      console.log('this is location link : ' , resolvedMapsLink);
     }
-    console.log(resolvedMapsLink);
 
-    const updateFields = {
-      ...data,
-      venue: {
+
+
+    const updateFields = {};
+
+    // ✅ Update only if value changed
+    if (data.startDate && new Date(data.startDate).getTime() !== new Date(existingEvent.date).getTime()) {
+      const start = new Date(data.startDate);
+      updateFields.date = new Date(start.getTime() + (5.5 * 60 * 60 * 1000));
+    }
+
+    if (data.endDate && new Date(data.endDate).getTime() !== new Date(existingEvent.endDate).getTime()) {
+      const endDate = new Date(data.endDate);
+      updateFields.endDate = new Date(endDate.getTime() + (5.5 * 60 * 60 * 1000));
+    }
+
+    if (data.rsvpDeadline && new Date(data.rsvpDeadline).getTime() !== new Date(existingEvent.rsvpDeadline).getTime()) {
+      const rsvpDeadline = new Date(data.rsvpDeadline);
+      updateFields.rsvpDeadline = new Date(rsvpDeadline.getTime() + (5.5 * 60 * 60 * 1000));
+    }
+
+    // ✅ Venue (compare nested fields)
+    if (
+      data.venueName !== existingEvent.venue?.name ||
+      data.venueAddress !== existingEvent.venue?.address ||
+      data.isOnline !== existingEvent.venue?.isOnline
+    ) {
+      updateFields.venue = {
         name: data.venueName,
         address: data.venueAddress,
         locationLink: resolvedMapsLink,
         isOnline: data.isOnline,
-      },
-    };
+      };
+    }
+    console.log(updateFields.venue);
 
-    // Handle tags if sent as comma-separated string
+    // ✅ Tags (handle comma-separated string)
     if (typeof data.tags === 'string') {
-      updateFields.tags = data.tags.split(',').map(tag => tag.trim());
+      const newTags = data.tags.split(',').map(tag => tag.trim());
+      if (JSON.stringify(newTags) !== JSON.stringify(existingEvent.tags)) {
+        updateFields.tags = newTags;
+      }
     }
 
-    // If image is uploaded, update bannerImageUrl
-    if (req.file) {
+    // ✅ Banner image
+    if (req.file && req.file.path !== existingEvent.bannerImageUrl) {
       updateFields.bannerImageUrl = req.file.path;
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(
-      eventId,
-      updateFields,
-      { new: true }
-    );
-
-    if (!updatedEvent) {
-      return res.status(404).json({ error: 'Event not found' });
+    // Apply update only if something changed
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(200).json({
+        status: 'no-change',
+        message: 'No fields were updated',
+        updatedEvent: existingEvent,
+      });
     }
+
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, updateFields, { new: true });
 
     res.status(200).json({
       status: 'success',
@@ -251,11 +288,83 @@ const getAllEvents = asyncErrorHandler(async(re, res)=>{
     })
 })
 
+
+
+// const updateEvent = asyncErrorHandler(async (req, res) => {
+//   console.log('in update event');
+//   try {
+//     const eventId = req.params.id;
+//     const data = req.body;
+
+//     console.log('Received data:', data);
+
+//     let resolvedMapsLink;
+
+//     if (data.venueAddress) {
+//       console.log('location updating');
+//       resolvedMapsLink = await resolveMapsLink(data.venueAddress);
+//     }
+//     console.log('Resolved Maps Link:', resolvedMapsLink);
+
+//     // Parse date strings into JavaScript Date objects
+//     const dateFormat = 'yyyy-MM-dd HH:mm:ss'; // Matches frontend format
+//     const startDate = data.startDate ? new Date(data.startDate) : null;
+//     const endDate = data.endDate ? new Date(data.endDate) : null;
+//     const rsvpDeadline = data.rsvpDeadline ? new Date(data.rsvpDeadline) : null;
+
+//     const updateFields = {
+//       ...data,
+//       date: startDate,
+//       endDate: endDate,
+//       rsvpDeadline: rsvpDeadline,
+//       venue: {
+//         name: data.venueName,
+//         address: data.venueAddress,
+//         locationLink: resolvedMapsLink,
+//         isOnline: data.isOnline === 'true',
+//       },
+//     };
+
+//     // Handle tags if sent as comma-separated string
+//     if (typeof data.tags === 'string') {
+//       updateFields.tags = data.tags.split(',').map(tag => tag.trim());
+//     }
+
+//     // If image is uploaded, update bannerImageUrl
+//     if (req.file) {
+//       updateFields.bannerImageUrl = req.file.path;
+//     }
+
+//     console.log('Updating fields:', updateFields);
+
+//     const updatedEvent = await Event.findByIdAndUpdate(
+//       eventId,
+//       updateFields,
+//       { new: true }
+//     );
+
+//     if (!updatedEvent) {
+//       return res.status(404).json({ error: 'Event not found' });
+//     }
+
+//     console.log('Updated event:', updatedEvent);
+
+//     res.status(200).json({
+//       status: 'success',
+//       updatedEvent,
+//     });
+//   } catch (err) {
+//     console.error('Error:', err);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });
+
 const getEvent = asyncErrorHandler(async (req, res, next) => {
   const id = req.params.id;
   if (!id) return next(new CustomError('Invalid event ID', 400));
 
   const event = await Event.findById(id);
+  console.log(event);
   if (!event) return next(new CustomError('No event record found', 400));
 
   // Clone event as plain object to modify safely
@@ -292,21 +401,23 @@ const getEvent = asyncErrorHandler(async (req, res, next) => {
 
         const isAdmin =
           user.userRole === 'admin'
+
         const iscoAdmin = user.userRole === 
           user.userRole === 'co-admin';
 
         eventObj.isAdmin = isAdmin;
         eventObj.iscoAdmin = iscoAdmin;
 
+
+        // RSVP list
+        const rsvpUserIds = event.rsvps.map(r => r.userId);
+        const rsvpUsers = await User.find({ _id: { $in: rsvpUserIds } }).select(
+          '_id name mobile yiTeam yiInitiatives'
+        );
+        eventObj.rsvpList = rsvpUsers;
+
         // If admin, include RSVP user info
         if (isAdmin) {
-          // RSVP list
-          const rsvpUserIds = event.rsvps.map(r => r.userId);
-          const rsvpUsers = await User.find({ _id: { $in: rsvpUserIds } }).select(
-            '_id name mobile yiTeam yiInitiatives'
-          );
-          eventObj.rsvpList = rsvpUsers;
-
           // QR Check-in list
           const checkInUserIds = event.qrCheckIns.map(c => c.userId);
           const checkInUsers = await User.find({ _id: { $in: checkInUserIds } }).select(
@@ -333,11 +444,13 @@ const getEvent = asyncErrorHandler(async (req, res, next) => {
       eventObj.hasUpvoted = false;
       eventObj.hasRsvped = false;
       eventObj.isAdmin = false;
+      eventObj.iscoAdmin = false;
     }
   } else {
     eventObj.hasUpvoted = false;
     eventObj.hasRsvped = false;
     eventObj.isAdmin = false;
+    eventObj.iscoAdmin = false; 
   }
 
   res.status(200).json({
@@ -345,6 +458,10 @@ const getEvent = asyncErrorHandler(async (req, res, next) => {
     event: eventObj,
   });
 });
+
+
+  
+
 
 
 

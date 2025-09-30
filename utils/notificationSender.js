@@ -5,6 +5,7 @@ const admin = require('./firebaseAdmin.js');
 const DeviceToken = require('../models/fcmTokenModel.js');
 
 exports.sendNotifications = async ({ userIds, type, refId, title, message, imageUrl }) => {
+  console.log('hi from service ');
   try {
     // 1. Save In-App Notifications
     const inAppNotifications = userIds.map(userId => ({

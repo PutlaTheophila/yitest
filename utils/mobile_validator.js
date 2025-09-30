@@ -370,7 +370,9 @@ exports.validateUserForOTP = (mobile) => {
   "9769175760",
   "9777496484",
   "8435581052",
-  "7000209749"
+  "7000209749",
+  // likhith number
+  "9492244179"
   ];
   return validNumbers.includes(mobile);
 }
