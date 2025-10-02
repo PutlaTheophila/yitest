@@ -2,3 +2,5 @@ firebase-service-account.json
 node_modules/
 .env
 .config/yi-whats-on-firebase-adminsdk-fbsvc-2242d46944.json
+config/yi-whats-on-firebase-adminsdk-fbsvc-2242d46944.json
+config/*.json
