@@ -4,3 +4,4 @@
 # Don't commit installed dependencies
 node_modules/
 .DS_Store
+config/*.json
